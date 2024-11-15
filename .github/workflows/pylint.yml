@@ -1,0 +1,9 @@
+import telebot  # Импортируем библиотеку с правильным названием
+
+bot = telebot.TeleBot('7314312206:AAGy41oKtvBmY9Tn6Ix8MqtnNtQIEOdYAuI')  # Создаем объект бота
+
+@bot.message_handler(commands=['start'])  # Обработчик для команды /start
+def start(message):
+    bot.send_message(message.chat.id, '<b>Привет</b>', parse_mode='html')
+
+bot.polling(none_stop=True)  # Запуск бота
