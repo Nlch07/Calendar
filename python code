@@ -1,9 +1,164 @@
-import telebot  # Импортируем библиотеку с правильным названием
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Календарь</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            padding: 20px;
+        }
+        .calendar {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 5px;
+            max-width: 300px;
+            margin: 0 auto;
+        }
+        .day {
+            padding: 10px;
+            border: 1px solid #ccc;
+            cursor: pointer;
+            text-align: center;
+            background-color: #f9f9f9;
+        }
+        .day:hover {
+            background-color: #e0e0e0;
+        }
+        .header {
+            font-size: 18px;
+            margin-bottom: 20px;
+        }
+        .controls {
+            margin-bottom: 10px;
+        }
+        .controls button {
+            padding: 5px 10px;
+            margin: 0 5px;
+        }
+        .color-picker {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            border: 1px solid #ccc;
+            padding: 20px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            z-index: 1000;
+        }
+        .color-picker button {
+            padding: 10px;
+            margin: 5px;
+            cursor: pointer;
+        }
+        .overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 999;
+        }
+    </style>
+</head>
+<body>
 
-bot = telebot.TeleBot('7314312206:AAGy41oKtvBmY9Tn6Ix8MqtnNtQIEOdYAuI')  # Создаем объект бота
+<div class="header">
+    <button onclick="prevMonth()">&#9664;</button>
+    <span id="month-year"></span>
+    <button onclick="nextMonth()">&#9654;</button>
+</div>
 
-@bot.message_handler(commands=['start'])  # Обработчик для команды /start
-def start(message):
-    bot.send_message(message.chat.id, '<b>Привет</b>', parse_mode='html')
+<div class="calendar" id="calendar"></div>
 
-bot.polling(none_stop=True)  # Запуск бота
+<div class="overlay" id="overlay"></div>
+<div class="color-picker" id="color-picker">
+    <p>Выберите цвет:</p>
+    <button style="background-color: green;" onclick="setColor('green')">Зелёный</button>
+    <button style="background-color: red;" onclick="setColor('red')">Красный</button>
+</div>
+
+<script>
+    const calendar = document.getElementById("calendar");
+    const monthYear = document.getElementById("month-year");
+    const colorPicker = document.getElementById("color-picker");
+    const overlay = document.getElementById("overlay");
+    let selectedDate = null;
+    let currentDate = new Date();
+    let colors = {};
+
+    function renderCalendar() {
+        calendar.innerHTML = "";
+        const year = currentDate.getFullYear();
+        const month = currentDate.getMonth();
+        const firstDay = new Date(year, month, 1).getDay();
+        const daysInMonth = new Date(year, month + 1, 0).getDate();
+        
+        monthYear.textContent = currentDate.toLocaleDateString("ru-RU", {
+            year: "numeric",
+            month: "long",
+        });
+
+        // Create empty slots for days before the first day
+        for (let i = 0; i < (firstDay === 0 ? 6 : firstDay - 1); i++) {
+            const emptyCell = document.createElement("div");
+            calendar.appendChild(emptyCell);
+        }
+
+        // Create day buttons
+        for (let day = 1; day <= daysInMonth; day++) {
+            const dayCell = document.createElement("div");
+            dayCell.textContent = day;
+            dayCell.className = "day";
+            const dateKey = `${year}-${month + 1}-${day}`;
+            
+            // Apply saved color
+            if (colors[dateKey]) {
+                dayCell.style.backgroundColor = colors[dateKey];
+            }
+
+            dayCell.onclick = () => openColorPicker(day, month, year);
+            calendar.appendChild(dayCell);
+        }
+    }
+
+    function openColorPicker(day, month, year) {
+        selectedDate = `${year}-${month + 1}-${day}`;
+        colorPicker.style.display = "block";
+        overlay.style.display = "block";
+    }
+
+    function setColor(color) {
+        if (selectedDate) {
+            colors[selectedDate] = color;
+        }
+        closeColorPicker();
+        renderCalendar();
+    }
+
+    function closeColorPicker() {
+        colorPicker.style.display = "none";
+        overlay.style.display = "none";
+    }
+
+    function prevMonth() {
+        currentDate.setMonth(currentDate.getMonth() - 1);
+        renderCalendar();
+    }
+
+    function nextMonth() {
+        currentDate.setMonth(currentDate.getMonth() + 1);
+        renderCalendar();
+    }
+
+    renderCalendar();
+</script>
+
+</body>
+</html>
