@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calendar</title>
+    <style>
+         body {
+            font-family: sans-serif;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            background-color: #f0f0f0;
+        }
+
+        .calendar-container {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            width: 90%;
+            max-width: 400px;
+            margin-bottom: 20px;
+        }
+
+        .calendar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .calendar-header button {
+            background: none;
+            border: none;
+            font-size: 1.5em;
+            cursor: pointer;
+            padding: 5px;
+        }
+
+        .calendar-header h2 {
+            margin: 0 10px;
+            font-size: 1.5em;
+        }
+
+        .weekdays {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            text-align: center;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .weekdays div {
+            padding: 5px 0;
+        }
+
+        .days {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            grid-gap: 5px;
+        }
+
+        .day {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: #e0e0e0;
+            border-radius: 5px;
+            height: 40px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            position: relative;
+        }
+
+        .day:hover {
+            background-color: #d0d0d0;
+        }
+
+        .day.selected {
+            background-color: #e6e6e6de;
+            color: white;
+        }
+
+        .day.red {
+            background-color: red;
+            color: white;
+        }
+
+        .day.blue {
+            background-color: blue;
+            color: white;
+        }
+
+        .day.green {
+            background-color: green;
+            color: white;
+        }
+
+        .day.other-month {
+            color: #888;
+        }
+
+        .day button {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background-color: transparent;
+            border: none;
+            cursor: pointer;
+            font-size: 12px;
+             display: none;
+        }
+          .color-buttons{
+             display: flex;
+           gap: 10px;
+           justify-content: center;
+            margin-top: 10px;
+           margin-bottom: 10px;
+        }
+         .color-buttons button{
+            background-color: transparent;
+             border: none;
+             cursor: pointer;
+              padding: 10px;
+        }
+    </style>
+</head>
+<body>
+<div class="calendar-container" id="calendar1">
+    <div class="calendar-header">
+        <button class="prev-month" data-calendar="1">&lt;</button>
+        <h2 class="current-month-year" data-calendar="1"></h2>
+        <button class="next-month" data-calendar="1">&gt;</button>
+    </div>
+    <div class="calendar-body">
+        <div class="weekdays">
+            <div>Пн</div>
+            <div>Вт</div>
+            <div>Ср</div>
+            <div>Чт</div>
+            <div>Пт</div>
+            <div>Сб</div>
+            <div>Вс</div>
+        </div>
+        <div class="days" data-calendar="1"></div>
+    </div>
+</div>
+<div class="calendar-container" id="calendar2">
+    <div class="calendar-header">
+        <button class="prev-month" data-calendar="2">&lt;</button>
+        <h2 class="current-month-year" data-calendar="2"></h2>
+        <button class="next-month" data-calendar="2">&gt;</button>
+    </div>
+    <div class="calendar-body">
+        <div class="weekdays">
+            <div>Пн</div>
+            <div>Вт</div>
+            <div>Ср</div>
+            <div>Чт</div>
+            <div>Пт</div>
+            <div>Сб</div>
+            <div>Вс</div>
+        </div>
+        <div class="days" data-calendar="2"></div>
+    </div>
+</div>
+<div class="color-buttons" id="color-buttons-container">
+    <button style="background-color: red;" data-color="red">🔴</button>
+    <button style="background-color: blue;" data-color="blue">🔵</button>
+    <button style="background-color: green;" data-color="green">🟢</button>
+</div>
+<script>
+    const prevMonthButtons = document.querySelectorAll('.prev-month');
+    const nextMonthButtons = document.querySelectorAll('.next-month');
+    const currentMonthYears = document.querySelectorAll('.current-month-year');
+    const daysContainers = document.querySelectorAll('.days');
+    const colorButtonsContainer = document.getElementById('color-buttons-container');
+      let calendars = {};
+    let selectedDay = null;
+
+    function initializeCalendar(calendarId) {
+         let currentDate = new Date();
+        const coloredDates = JSON.parse(localStorage.getItem('coloredDates' + calendarId)) || {};
+        function generateCalendar() {
+             const firstDay = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
+             const lastDay = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0);
+            const firstDayOfWeek = firstDay.getDay() === 0 ? 7 : firstDay.getDay();
+             const totalDays = lastDay.getDate();
+             const prevMonthLastDay = new Date(currentDate.getFullYear(), currentDate.getMonth(), 0).getDate();
+
+            const currentMonthYearElement = document.querySelector(`.current-month-year[data-calendar="${calendarId}"]`);
+            const daysContainerElement = document.querySelector(`.days[data-calendar="${calendarId}"]`);
+            currentMonthYearElement.textContent = `${currentDate.toLocaleString('default', {month: 'long'})} ${currentDate.getFullYear()}`;
+            daysContainerElement.innerHTML = '';
+            let dayCounter = 1;
+             let prevMonthDayCounter = prevMonthLastDay - firstDayOfWeek + 2;
+
+            for (let i = 1; i <= 42; i++) {
+               const dayDiv = document.createElement('div');
+                dayDiv.classList.add('day');
+
+               if(i < firstDayOfWeek){
+                    dayDiv.classList.add('other-month');
+                    dayDiv.textContent = prevMonthDayCounter++;
+                }
+                else if (dayCounter <= totalDays) {
+                    dayDiv.textContent = dayCounter;
+                   const dayKey = `${currentDate.getFullYear()}-${currentDate.getMonth() + 1}-${dayCounter}`;
+                    if (coloredDates[dayKey]) {
+                       dayDiv.classList.add(coloredDates[dayKey]);
+                    } else {
+                        dayDiv.classList.add('green')
+                    }
+
+                    dayDiv.addEventListener('click', () => {
+                        document.querySelectorAll('.day').forEach(day => {
+                            day.classList.remove('selected');
+                        });
+                        dayDiv.classList.add('selected');
+                       selectedDay = {dayDiv: dayDiv, dayKey: dayKey, calendarId: calendarId};
+                    });
+                    dayCounter++;
+                }
+                else {
+                      dayDiv.classList.add('other-month');
+                      dayDiv.textContent =  dayCounter - totalDays;
+                     dayCounter++;
+                   }
+               daysContainerElement.appendChild(dayDiv);
+            }
+        }
+
+        function prevMonth() {
+            currentDate.setMonth(currentDate.getMonth() - 1);
+             generateCalendar();
+        }
+
+         function nextMonth() {
+           currentDate.setMonth(currentDate.getMonth() + 1);
+             generateCalendar();
+        }
+        generateCalendar();
+
+          return {
+                prevMonth: prevMonth,
+                nextMonth: nextMonth,
+                currentDate: currentDate,
+                coloredDates: coloredDates,
+                generateCalendar: generateCalendar
+           };
+    }
+    prevMonthButtons.forEach(button => {
+        button.addEventListener('click', function () {
+            const calendarId = this.dataset.calendar;
+           calendars[calendarId].prevMonth()
+        });
+    });
+    nextMonthButtons.forEach(button => {
+        button.addEventListener('click', function () {
+            const calendarId = this.dataset.calendar;
+           calendars[calendarId].nextMonth();
+        });
+    });
+    for (let i = 1; i <= 2; i++) {
+         calendars[i] = initializeCalendar(i);
+    }
+  colorButtonsContainer.addEventListener('click', (event) => {
+         if (event.target.tagName === 'BUTTON') {
+            const color = event.target.dataset.color;
+            if (selectedDay) {
+                selectedDay.dayDiv.classList.remove('red', 'blue', 'green');
+                if(selectedDay.dayDiv.classList.contains(color)){
+                    selectedDay.dayDiv.classList.remove(color);
+                     calendars[selectedDay.calendarId].coloredDates[selectedDay.dayKey] = '';
+                  }
+                  else {
+                      selectedDay.dayDiv.classList.add(color);
+                    calendars[selectedDay.calendarId].coloredDates[selectedDay.dayKey] = color;
+                 }
+                localStorage.setItem('coloredDates' + selectedDay.calendarId, JSON.stringify(calendars[selectedDay.calendarId].coloredDates));
+                 selectedDay = null;
+             }
+         }
+    });
+</script>
+</body>
+</html>
