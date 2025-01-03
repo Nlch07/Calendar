@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Calendar</title>
     <style>
-         body {
+        body {
             font-family: sans-serif;
             display: flex;
             flex-direction: column;
@@ -20,10 +20,10 @@
             background-color: white;
             border-radius: 8px;
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-            padding: 8px; /* Уменьшил padding */
+            padding: 8px;
             width: 90%;
-            max-width: 350px; /* Уменьшил max-width */
-            margin-bottom: 15px; /* Уменьшил margin-bottom */
+            max-width: 350px;
+            margin-bottom: 15px;
             margin: 5px;
         }
 
@@ -31,20 +31,20 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 8px; /* Уменьшил margin-bottom */
+            margin-bottom: 8px;
         }
 
         .calendar-header button {
             background: none;
             border: none;
-            font-size: 1.2em; /* Уменьшил font-size */
+            font-size: 1.2em;
             cursor: pointer;
-            padding: 4px; /* Уменьшил padding */
+            padding: 4px;
         }
 
         .calendar-header h2 {
-            margin: 0 8px; /* Уменьшил margin */
-            font-size: 1.2em; /* Уменьшил font-size */
+            margin: 0 8px;
+            font-size: 1.2em;
         }
 
         .weekdays {
@@ -52,17 +52,17 @@
             grid-template-columns: repeat(7, 1fr);
             text-align: center;
             font-weight: bold;
-            margin-bottom: 8px; /* Уменьшил margin-bottom */
+            margin-bottom: 8px;
         }
 
         .weekdays div {
-            padding: 4px 0; /* Уменьшил padding */
+            padding: 4px 0;
         }
 
         .days {
             display: grid;
             grid-template-columns: repeat(7, 1fr);
-            grid-gap: 4px; /* Уменьшил grid-gap */
+            grid-gap: 4px;
         }
 
         .day {
@@ -73,7 +73,7 @@
             border-radius: 4px;
             height: 35px;
             cursor: pointer;
-            transition: background-color 0.3s ease, color 0.3s ease; /* Добавляем transition для фона и текста */
+            transition: background-color 0.3s ease, color 0.3s ease;
             position: relative;
         }
 
@@ -100,10 +100,10 @@
             background-color: green;
             color: white;
         }
-         .day.orange {
-             background-color: orange;
-             color: white;
-         }
+        .day.orange {
+            background-color: orange;
+            color: white;
+        }
 
         .day.other-month {
             color: #888;
@@ -117,27 +117,45 @@
             border: none;
             cursor: pointer;
             font-size: 12px;
-             display: none;
+            display: none;
         }
-          .color-buttons{
-             display: flex;
-           gap: 8px;  /* Уменьшил gap */
-           justify-content: center;
-            margin-top: 8px; /* Уменьшил margin-top */
-           margin-bottom: 8px; /* Уменьшил margin-bottom */
+        .color-buttons{
+            display: flex;
+            gap: 8px;
+            justify-content: center;
+            margin-top: 8px;
+            margin-bottom: 8px;
         }
-         .color-buttons button{
+        .color-buttons button{
             background-color: transparent;
-             border: none;
-             cursor: pointer;
-              padding: 10px; /* Уменьшил padding */
-              border-radius: 5px;
-              width: 60px; /* Уменьшил width */
-              height: 25px;
+            border: none;
+            cursor: pointer;
+            padding: 10px;
+            border-radius: 5px;
+            width: 60px;
+            height: 25px;
         }
         .day.selected {
-            background-color: #c7c7c7; /*  темно-серый цвет */
-            color: black; /* Возвращаем цвет текста в черный */
+            background-color: #c7c7c7;
+            color: black;
+        }
+         .note-area{
+            margin: 5px;
+            padding: 10px;
+            border: 1px solid #eee;
+            background-color: #f9f9f9;
+            min-height: 80px;
+            white-space: pre-wrap;
+            word-break: break-word;
+            margin-bottom: 10px;
+            outline: none;
+        }
+         .editing {
+            background-color: #e0f7fa;
+             border-color: #007bff;
+        }
+        .note-area.placeholder {
+            color: #aaa; /* Полупрозрачный серый цвет */
         }
     </style>
 </head>
@@ -161,6 +179,7 @@
         </div>
         <div class="days" data-calendar="1"></div>
     </div>
+      <div class="note-area" id="note-area-1" tabindex="0" contenteditable="false"></div>
 </div>
 <div class="calendar-container" id="calendar1">
     <div class="color-buttons" id="color-buttons-container">
@@ -168,12 +187,6 @@
         <button style="background-color: blue;" data-color="blue"></button>
         <button style="background-color: green;" data-color="green"></button>
         <button style="background-color: orange;" data-color="orange"></button>
-    </div>
-</div>
-
-<div class="calendar-container" id="calendar1">
-    <div class="color-buttons" id="color-buttons-container">
-        заметки по поводу определенной да
     </div>
 </div>
 
@@ -196,6 +209,7 @@
         </div>
         <div class="days" data-calendar="2"></div>
     </div>
+     <div class="note-area" id="note-area-2" tabindex="0" contenteditable="false"></div>
 </div>
 
 <script>
@@ -204,14 +218,19 @@
     const currentMonthYears = document.querySelectorAll('.current-month-year');
     const daysContainers = document.querySelectorAll('.days');
     const colorButtonsContainer = document.getElementById('color-buttons-container');
-    let calendars = {};
-    let selectedDays = {}; // Объект для хранения выбранных дат по calendarId
-    
+     let calendars = {};
+     let selectedDays = {};
+
+      let isEditing = false;
+
 
     function initializeCalendar(calendarId) {
         let currentDate = new Date();
         const coloredDates = JSON.parse(localStorage.getItem('coloredDates' + calendarId)) || {};
-         selectedDays[calendarId] = selectedDays[calendarId] || [];  // Инициализируем массив для этого календаря
+         const notes = JSON.parse(localStorage.getItem('notes' + calendarId)) || {};
+        const noteArea = document.getElementById('note-area-' + calendarId);
+        selectedDays[calendarId] = selectedDays[calendarId] || [];
+
 
         function generateCalendar() {
             const firstDay = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
@@ -236,7 +255,7 @@
                     dayDiv.textContent = prevMonthDayCounter++;
                 } else if (dayCounter <= totalDays) {
                     dayDiv.textContent = dayCounter;
-                    const dayKey = `${currentDate.getFullYear()}-${currentDate.getMonth() + 1}-${dayCounter}`;
+                     const dayKey = `${currentDate.getFullYear()}-${currentDate.getMonth() + 1}-${dayCounter}`;
                     if (coloredDates[dayKey]) {
                         dayDiv.classList.add(coloredDates[dayKey]);
                     } else {
@@ -244,17 +263,26 @@
                     }
 
                     dayDiv.addEventListener('click', () => {
-                       // Проверяем, выбран ли уже этот день
-                       const index = selectedDays[calendarId].findIndex(item => item.dayDiv === dayDiv);
-                        if (index === -1) {
-                            // Добавляем день в список, если его нет
+                        const index = selectedDays[calendarId].findIndex(item => item.dayDiv === dayDiv);
+                         if (index === -1) {
                             selectedDays[calendarId].push({dayDiv: dayDiv, dayKey: dayKey});
                             dayDiv.classList.add('selected');
                         } else {
-                             // Если день уже есть, удаляем
-                             selectedDays[calendarId].splice(index, 1);
+                            selectedDays[calendarId].splice(index, 1);
                             dayDiv.classList.remove('selected');
-                        }
+                         }
+                          if(selectedDays[calendarId].length > 0){
+                          let keys = selectedDays[calendarId].map(item => item.dayKey)
+                                let text = '';
+                                 keys.forEach(key => {
+                                     if(notes[key]){
+                                           text += notes[key] + '\n'
+                                     }
+                                 })
+                                noteArea.textContent = text;
+                           } else {
+                               noteArea.textContent = ''
+                           }
                     });
                     dayCounter++;
                 } else {
@@ -276,6 +304,18 @@
             generateCalendar();
         }
 
+        noteArea.addEventListener('click', function() {
+             if (!isEditing) {
+                   startEditing(noteArea)
+                }
+         });
+
+          noteArea.addEventListener('blur',function (){
+                if(isEditing) {
+                  finishEditing(noteArea, notes, selectedDays[calendarId].map(item => item.dayKey));
+               }
+          });
+
         generateCalendar();
 
         return {
@@ -283,6 +323,7 @@
             nextMonth: nextMonth,
             currentDate: currentDate,
             coloredDates: coloredDates,
+             notes: notes,
             generateCalendar: generateCalendar
         };
     }
@@ -308,23 +349,108 @@
      colorButtonsContainer.addEventListener('click', (event) => {
         if (event.target.tagName === 'BUTTON') {
             const color = event.target.dataset.color;
-           for (const calendarId in selectedDays) {
+            for (const calendarId in selectedDays) {
                 selectedDays[calendarId].forEach(selectedDay => {
-                    selectedDay.dayDiv.classList.remove('red', 'blue', 'green', 'orange');
+                      selectedDay.dayDiv.classList.remove('red', 'blue', 'green', 'orange');
                     if (selectedDay.dayDiv.classList.contains(color)) {
                         selectedDay.dayDiv.classList.remove(color);
                         calendars[calendarId].coloredDates[selectedDay.dayKey] = '';
                     } else {
                         selectedDay.dayDiv.classList.add(color);
-                        calendars[calendarId].coloredDates[selectedDay.dayKey] = color;
+                         calendars[calendarId].coloredDates[selectedDay.dayKey] = color;
                     }
-                   selectedDay.dayDiv.classList.remove('selected'); // Убираем выделение
+                    selectedDay.dayDiv.classList.remove('selected')
                 });
-                 localStorage.setItem('coloredDates' + calendarId, JSON.stringify(calendars[calendarId].coloredDates));
-                 selectedDays[calendarId] = [];// Очищаем список выбранных дней после применения цвета
+                localStorage.setItem('coloredDates' + calendarId, JSON.stringify(calendars[calendarId].coloredDates));
+                selectedDays[calendarId] = [];
             }
         }
     });
+
+  function startEditing(noteArea){
+        isEditing = true;
+        noteArea.contentEditable = "true";
+        noteArea.focus();
+         noteArea.classList.add('editing');
+    }
+
+
+          noteArea.addEventListener('click', function() {
+                if (!isEditing) {
+                     startEditing(noteArea)
+                    if(noteArea.classList.contains('placeholder')) {
+                        noteArea.textContent = '';
+                         noteArea.classList.remove('placeholder');
+                     }
+                }
+         });
+
+          noteArea.addEventListener('blur',function (){
+             if(isEditing) {
+                finishEditing(noteArea, notes, selectedDays[calendarId].map(item => item.dayKey));
+               }
+                  if(noteArea.textContent === ''){
+                     updateNoteAreaPlaceholder(noteArea, notes, selectedDays[calendarId].map(item => item.dayKey));
+                 }
+          });
+
+
+
+        dayDiv.addEventListener('click', () => {
+             const index = selectedDays[calendarId].findIndex(item => item.dayDiv === dayDiv);
+              if (index === -1) {
+                  selectedDays[calendarId].push({dayDiv: dayDiv, dayKey: dayKey});
+                    dayDiv.classList.add('selected');
+               } else {
+                   selectedDays[calendarId].splice(index, 1);
+                   dayDiv.classList.remove('selected');
+              }
+               if(selectedDays[calendarId].length > 0){
+                    let keys = selectedDays[calendarId].map(item => item.dayKey)
+                    updateNoteAreaPlaceholder(noteArea, notes, keys)
+               }
+               else {
+                updateNoteAreaPlaceholder(noteArea, notes, [])
+             }
+           });
+
+        // Вызов при инициализации и при смене дат
+        updateNoteAreaPlaceholder(noteArea, notes, selectedDays[calendarId]?.map(item => item.dayKey));
+      noteArea.addEventListener('click', function() {
+             if (!isEditing) {
+                   startEditing(noteArea)
+                  if(noteArea.classList.contains('placeholder')) {
+                      noteArea.textContent = '';
+                       noteArea.classList.remove('placeholder');
+                   }
+                }
+          });
+
+           noteArea.addEventListener('blur',function (){
+                if(isEditing) {
+                  finishEditing(noteArea, notes, selectedDays[calendarId].map(item => item.dayKey));
+               }
+               if(noteArea.textContent === ''){
+                     updateNoteAreaPlaceholder(noteArea, notes, selectedDays[calendarId].map(item => item.dayKey));
+               }
+          });
+
+         // Вызов при инициализации и при смене дат
+         updateNoteAreaPlaceholder(noteArea, notes, selectedDays[calendarId]?.map(item => item.dayKey));
+
+    function finishEditing(noteArea, notes, dayKeys){
+          isEditing = false;
+        noteArea.contentEditable = "false";
+         noteArea.classList.remove('editing');
+        if (dayKeys) {
+                dayKeys.forEach(key => {
+                  notes[key] = noteArea.textContent;
+              });
+            localStorage.setItem('notes' + selectedDay?.calendarId, JSON.stringify(notes));
+        }
+
+    }
+    
 </script>
 </body>
 </html>
