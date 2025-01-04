@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Calendar</title>
+    <title>Calendar3</title>
     <style>
         body {
             font-family: sans-serif;
@@ -218,19 +218,16 @@
     const currentMonthYears = document.querySelectorAll('.current-month-year');
     const daysContainers = document.querySelectorAll('.days');
     const colorButtonsContainer = document.getElementById('color-buttons-container');
-     let calendars = {};
-     let selectedDays = {};
-
-      let isEditing = false;
-
+    let calendars = {};
+    let selectedDays = {};
+    let isEditing = false;
 
     function initializeCalendar(calendarId) {
         let currentDate = new Date();
         const coloredDates = JSON.parse(localStorage.getItem('coloredDates' + calendarId)) || {};
-         const notes = JSON.parse(localStorage.getItem('notes' + calendarId)) || {};
+        const notes = JSON.parse(localStorage.getItem('notes' + calendarId)) || {};
         const noteArea = document.getElementById('note-area-' + calendarId);
         selectedDays[calendarId] = selectedDays[calendarId] || [];
-
 
         function generateCalendar() {
             const firstDay = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
@@ -255,35 +252,17 @@
                     dayDiv.textContent = prevMonthDayCounter++;
                 } else if (dayCounter <= totalDays) {
                     dayDiv.textContent = dayCounter;
-                     const dayKey = `${currentDate.getFullYear()}-${currentDate.getMonth() + 1}-${dayCounter}`;
+                    const dayKey = `${currentDate.getFullYear()}-${currentDate.getMonth() + 1}-${dayCounter}`;
                     if (coloredDates[dayKey]) {
                         dayDiv.classList.add(coloredDates[dayKey]);
                     } else {
                         dayDiv.classList.add('green')
                     }
 
-                    dayDiv.addEventListener('click', () => {
-                        const index = selectedDays[calendarId].findIndex(item => item.dayDiv === dayDiv);
-                         if (index === -1) {
-                            selectedDays[calendarId].push({dayDiv: dayDiv, dayKey: dayKey});
-                            dayDiv.classList.add('selected');
-                        } else {
-                            selectedDays[calendarId].splice(index, 1);
-                            dayDiv.classList.remove('selected');
-                         }
-                          if(selectedDays[calendarId].length > 0){
-                          let keys = selectedDays[calendarId].map(item => item.dayKey)
-                                let text = '';
-                                 keys.forEach(key => {
-                                     if(notes[key]){
-                                           text += notes[key] + '\n'
-                                     }
-                                 })
-                                noteArea.textContent = text;
-                           } else {
-                               noteArea.textContent = ''
-                           }
-                    });
+                     dayDiv.addEventListener('click', () => {
+                         selectDay(dayDiv, dayKey, calendarId, notes, noteArea);
+                     });
+
                     dayCounter++;
                 } else {
                     dayDiv.classList.add('other-month');
@@ -304,17 +283,55 @@
             generateCalendar();
         }
 
+        noteArea.addEventListener('keydown', function(event) {
+            if (event.key === 'Enter') {
+                event.preventDefault(); // Предотвращаем вставку новой строки
+                if(isEditing) {
+                    finishEditing(noteArea, notes, selectedDays[calendarId].map(item => item.dayKey), calendarId);
+                }
+                 if(noteArea.textContent === ''){
+                      updateNoteAreaPlaceholder(noteArea, notes, selectedDays[calendarId].map(item => item.dayKey), calendarId);
+                  }
+
+            }
+          });
+
+
         noteArea.addEventListener('click', function() {
              if (!isEditing) {
                    startEditing(noteArea)
                 }
-         });
-
-          noteArea.addEventListener('blur',function (){
-                if(isEditing) {
-                  finishEditing(noteArea, notes, selectedDays[calendarId].map(item => item.dayKey));
-               }
           });
+
+           noteArea.addEventListener('blur',function (){
+                if(isEditing) {
+                  finishEditing(noteArea, notes, selectedDays[calendarId].map(item => item.dayKey), calendarId);
+               }
+               if(noteArea.textContent === ''){
+                    updateNoteAreaPlaceholder(noteArea, notes, selectedDays[calendarId].map(item => item.dayKey), calendarId);
+                }
+          });
+
+           noteArea.addEventListener('blur',function (){
+                if(isEditing) {
+                  finishEditing(noteArea, notes, selectedDays[calendarId].map(item => item.dayKey), calendarId);
+               }
+               if(noteArea.textContent === ''){
+                    updateNoteAreaPlaceholder(noteArea, notes, selectedDays[calendarId].map(item => item.dayKey), calendarId);
+                }
+          });
+
+           noteArea.addEventListener('blur',function (){
+                if(isEditing) {
+                  finishEditing(noteArea, notes, selectedDays[calendarId].map(item => item.dayKey), calendarId);
+               }
+               if(noteArea.textContent === ''){
+                    updateNoteAreaPlaceholder(noteArea, notes, selectedDays[calendarId].map(item => item.dayKey), calendarId);
+                }
+          });
+
+       // Вызов при инициализации и при смене дат
+         updateNoteAreaPlaceholder(noteArea, notes, selectedDays[calendarId]?.map(item => item.dayKey), calendarId);
 
         generateCalendar();
 
@@ -323,7 +340,7 @@
             nextMonth: nextMonth,
             currentDate: currentDate,
             coloredDates: coloredDates,
-             notes: notes,
+            notes: notes,
             generateCalendar: generateCalendar
         };
     }
@@ -351,7 +368,7 @@
             const color = event.target.dataset.color;
             for (const calendarId in selectedDays) {
                 selectedDays[calendarId].forEach(selectedDay => {
-                      selectedDay.dayDiv.classList.remove('red', 'blue', 'green', 'orange');
+                    selectedDay.dayDiv.classList.remove('red', 'blue', 'green', 'orange');
                     if (selectedDay.dayDiv.classList.contains(color)) {
                         selectedDay.dayDiv.classList.remove(color);
                         calendars[calendarId].coloredDates[selectedDay.dayKey] = '';
@@ -363,94 +380,77 @@
                 });
                 localStorage.setItem('coloredDates' + calendarId, JSON.stringify(calendars[calendarId].coloredDates));
                 selectedDays[calendarId] = [];
+                const noteArea = document.getElementById('note-area-' + calendarId);
+                 updateNoteAreaPlaceholder(noteArea, calendars[calendarId].notes, [], calendarId);
             }
         }
     });
 
-  function startEditing(noteArea){
+    function startEditing(noteArea){
         isEditing = true;
         noteArea.contentEditable = "true";
         noteArea.focus();
-         noteArea.classList.add('editing');
+        noteArea.classList.add('editing');
+         if(noteArea.classList.contains('placeholder')) {
+            noteArea.textContent = '';
+             noteArea.classList.remove('placeholder');
+        }
     }
 
 
-          noteArea.addEventListener('click', function() {
-                if (!isEditing) {
-                     startEditing(noteArea)
-                    if(noteArea.classList.contains('placeholder')) {
-                        noteArea.textContent = '';
-                         noteArea.classList.remove('placeholder');
-                     }
-                }
-         });
-
-          noteArea.addEventListener('blur',function (){
-             if(isEditing) {
-                finishEditing(noteArea, notes, selectedDays[calendarId].map(item => item.dayKey));
-               }
-                  if(noteArea.textContent === ''){
-                     updateNoteAreaPlaceholder(noteArea, notes, selectedDays[calendarId].map(item => item.dayKey));
-                 }
-          });
-
-
-
-        dayDiv.addEventListener('click', () => {
-             const index = selectedDays[calendarId].findIndex(item => item.dayDiv === dayDiv);
-              if (index === -1) {
-                  selectedDays[calendarId].push({dayDiv: dayDiv, dayKey: dayKey});
-                    dayDiv.classList.add('selected');
-               } else {
-                   selectedDays[calendarId].splice(index, 1);
-                   dayDiv.classList.remove('selected');
-              }
-               if(selectedDays[calendarId].length > 0){
-                    let keys = selectedDays[calendarId].map(item => item.dayKey)
-                    updateNoteAreaPlaceholder(noteArea, notes, keys)
-               }
-               else {
-                updateNoteAreaPlaceholder(noteArea, notes, [])
-             }
-           });
-
-        // Вызов при инициализации и при смене дат
-        updateNoteAreaPlaceholder(noteArea, notes, selectedDays[calendarId]?.map(item => item.dayKey));
-      noteArea.addEventListener('click', function() {
-             if (!isEditing) {
-                   startEditing(noteArea)
-                  if(noteArea.classList.contains('placeholder')) {
-                      noteArea.textContent = '';
-                       noteArea.classList.remove('placeholder');
-                   }
-                }
-          });
-
-           noteArea.addEventListener('blur',function (){
-                if(isEditing) {
-                  finishEditing(noteArea, notes, selectedDays[calendarId].map(item => item.dayKey));
-               }
-               if(noteArea.textContent === ''){
-                     updateNoteAreaPlaceholder(noteArea, notes, selectedDays[calendarId].map(item => item.dayKey));
-               }
-          });
-
-         // Вызов при инициализации и при смене дат
-         updateNoteAreaPlaceholder(noteArea, notes, selectedDays[calendarId]?.map(item => item.dayKey));
-
-    function finishEditing(noteArea, notes, dayKeys){
-          isEditing = false;
+    function finishEditing(noteArea, notes, dayKeys, calendarId){
+        isEditing = false;
         noteArea.contentEditable = "false";
          noteArea.classList.remove('editing');
-        if (dayKeys) {
-                dayKeys.forEach(key => {
+       if (dayKeys && dayKeys.length > 0) {
+              dayKeys.forEach(key => {
                   notes[key] = noteArea.textContent;
-              });
-            localStorage.setItem('notes' + selectedDay?.calendarId, JSON.stringify(notes));
+             });
+           localStorage.setItem('notes' + calendarId, JSON.stringify(notes));
         }
 
     }
-    
+
+
+    function updateNoteAreaPlaceholder(noteArea, notes, dayKeys, calendarId) {
+    let text = '';
+    if (dayKeys && dayKeys.length > 0) {
+        dayKeys.forEach(key => {
+            if (notes[key]) {
+                text += notes[key] + '\n';
+            }
+        });
+    }
+
+    if (text === '') {
+        noteArea.textContent = ''; // Очищаем текстовое поле
+        noteArea.classList.add('placeholder');
+        noteArea.dataset.placeholder = 'Мам,здесь будут заметки для выбранных дней'; // Сохраняем плейсхолдер в атрибуте data-placeholder
+        noteArea.textContent = noteArea.dataset.placeholder; // Устанавливаем плейсхолдер
+    } else {
+        noteArea.classList.remove('placeholder');
+        noteArea.textContent = text; // Устанавливаем заметку, если она есть
+         noteArea.dataset.placeholder = null; // Удаляем сохраненный placeholder
+    }
+}
+
+ function selectDay(dayDiv, dayKey, calendarId, notes, noteArea) {
+          const index = selectedDays[calendarId].findIndex(item => item.dayDiv === dayDiv);
+          if (index === -1) {
+                selectedDays[calendarId].push({dayDiv: dayDiv, dayKey: dayKey, calendarId: calendarId});
+                 dayDiv.classList.add('selected');
+            } else {
+                selectedDays[calendarId].splice(index, 1);
+                dayDiv.classList.remove('selected');
+           }
+
+           if(selectedDays[calendarId].length > 0){
+                 let keys = selectedDays[calendarId].map(item => item.dayKey)
+                updateNoteAreaPlaceholder(noteArea, notes, keys, calendarId)
+           } else {
+            updateNoteAreaPlaceholder(noteArea, notes, [], calendarId)
+         }
+ }
 </script>
 </body>
 </html>
