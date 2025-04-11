@@ -44,11 +44,10 @@
 
         .calendar-header h2 {
             margin: 0 8px;
-            font-size: 1.5em; /* Увеличили размер */
-            font-weight: bold; /* Добавили жирность */
-            text-transform: capitalize; /* Первая буква заглавная */
-    }
-
+            font-size: 1.5em;
+            font-weight: bold;
+            text-transform: capitalize;
+        }
 
         .weekdays {
             display: grid;
@@ -85,8 +84,10 @@
         }
 
         .day.selected {
-            background-color: #e6e6e6de;
-            color: white;
+            background-color: #c7c7c7 !important;
+            color: black !important;
+            position: relative;
+            z-index: 2;
         }
 
         .day.red {
@@ -103,33 +104,24 @@
             background-color: green;
             color: white;
         }
-        .day.orange {
-            background-color: orange;
-            color: white;
+
+        .day.today {
+            background-color: orange !important;
         }
 
         .day.other-month {
             color: #888;
         }
 
-        .day button {
-            position: absolute;
-            top: -5px;
-            right: -5px;
-            background-color: transparent;
-            border: none;
-            cursor: pointer;
-            font-size: 12px;
-            display: none;
-        }
-        .color-buttons{
+        .color-buttons {
             display: flex;
             gap: 8px;
             justify-content: center;
             margin-top: 8px;
             margin-bottom: 8px;
         }
-        .color-buttons button{
+
+        .color-buttons button {
             background-color: transparent;
             border: none;
             cursor: pointer;
@@ -138,11 +130,15 @@
             width: 60px;
             height: 25px;
         }
-        .day.selected {
-            background-color: #c7c7c7;
-            color: black;
+
+        .notes-container {
+            display: flex;
+            align-items: flex-start;
+            gap: 8px;
+            width: 100%;
         }
-         .note-area{
+
+        .note-area {
             margin: 5px;
             padding: 10px;
             border: 1px solid #eee;
@@ -150,15 +146,33 @@
             min-height: 80px;
             white-space: pre-wrap;
             word-break: break-word;
-            margin-bottom: 10px;
+            flex-grow: 1;
             outline: none;
         }
-         .editing {
-            background-color: #e0f7fa;
-             border-color: #007bff;
+
+        .save-btn {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            padding: 10px;
+            cursor: pointer;
+            margin-top: 5px;
+            height: 80px;
+            width: 80px;
         }
+
+        .save-btn:hover {
+            background-color: #45a049;
+        }
+
         .note-area.placeholder {
-            color: #aaa; /* Полупрозрачный серый цвет */
+            color: #aaa;
+        }
+
+        .editing {
+            background-color: #e0f7fa;
+            border-color: #007bff;
         }
     </style>
 </head>
@@ -182,9 +196,13 @@
         </div>
         <div class="days" data-calendar="1"></div>
     </div>
-      <div class="note-area" id="note-area-1" tabindex="0" contenteditable="false"></div>
+    <div class="notes-container">
+        <div class="note-area" id="note-area-1" tabindex="0" contenteditable="false"></div>
+        <button class="save-btn" data-calendar="1">Сохранить</button>
+    </div>
 </div>
-<div class="calendar-container" id="calendar1">
+
+<div class="calendar-container">
     <div class="color-buttons" id="color-buttons-container">
         <button style="background-color: red;" data-color="red"></button>
         <button style="background-color: blue;" data-color="blue"></button>
@@ -211,7 +229,10 @@
         </div>
         <div class="days" data-calendar="2"></div>
     </div>
-     <div class="note-area" id="note-area-2" tabindex="0" contenteditable="false"></div>
+    <div class="notes-container">
+        <div class="note-area" id="note-area-2" tabindex="0" contenteditable="false"></div>
+        <button class="save-btn" data-calendar="2">Сохранить</button>
+    </div>
 </div>
 
 <script>
@@ -229,7 +250,9 @@
         const coloredDates = JSON.parse(localStorage.getItem('coloredDates' + calendarId)) || {};
         const notes = JSON.parse(localStorage.getItem('notes' + calendarId)) || {};
         const noteArea = document.getElementById('note-area-' + calendarId);
+        const saveBtn = document.querySelector(`.save-btn[data-calendar="${calendarId}"]`);
         selectedDays[calendarId] = selectedDays[calendarId] || [];
+        const today = new Date();
 
         function generateCalendar() {
             const firstDay = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
@@ -240,7 +263,7 @@
 
             const currentMonthYearElement = document.querySelector(`.current-month-year[data-calendar="${calendarId}"]`);
             const daysContainerElement = document.querySelector(`.days[data-calendar="${calendarId}"]`);
-            currentMonthYearElement.textContent = `${currentDate.toLocaleString('default', {month: 'long'})} ${currentDate.getFullYear()}`;
+            currentMonthYearElement.textContent = `${currentDate.toLocaleString('ru-RU', {month: 'long'})} ${currentDate.getFullYear()}`;
             daysContainerElement.innerHTML = '';
             let dayCounter = 1;
             let prevMonthDayCounter = prevMonthLastDay - firstDayOfWeek + 2;
@@ -255,15 +278,23 @@
                 } else if (dayCounter <= totalDays) {
                     dayDiv.textContent = dayCounter;
                     const dayKey = `${currentDate.getFullYear()}-${currentDate.getMonth() + 1}-${dayCounter}`;
+                    
+                    // Выделяем текущую дату желтым
+                    if (currentDate.getFullYear() === today.getFullYear() && 
+                        currentDate.getMonth() === today.getMonth() && 
+                        dayCounter === today.getDate()) {
+                        dayDiv.classList.add('today');
+                    }
+
                     if (coloredDates[dayKey]) {
                         dayDiv.classList.add(coloredDates[dayKey]);
                     } else {
-                        dayDiv.classList.add('green')
+                        dayDiv.classList.add('green');
                     }
 
-                     dayDiv.addEventListener('click', () => {
-                         selectDay(dayDiv, dayKey, calendarId, notes, noteArea);
-                     });
+                    dayDiv.addEventListener('click', () => {
+                        selectDay(dayDiv, dayKey, calendarId, notes, noteArea);
+                    });
 
                     dayCounter++;
                 } else {
@@ -285,56 +316,20 @@
             generateCalendar();
         }
 
-        noteArea.addEventListener('keydown', function(event) {
-            if (event.key === 'Enter') {
-                event.preventDefault(); // Предотвращаем вставку новой строки
-                if(isEditing) {
-                    finishEditing(noteArea, notes, selectedDays[calendarId].map(item => item.dayKey), calendarId);
-                }
-                 if(noteArea.textContent === ''){
-                      updateNoteAreaPlaceholder(noteArea, notes, selectedDays[calendarId].map(item => item.dayKey), calendarId);
-                  }
-
-            }
-          });
-
-
         noteArea.addEventListener('click', function() {
-             if (!isEditing) {
-                   startEditing(noteArea)
-                }
-          });
+            if (!isEditing) {
+                startEditing(noteArea, calendarId);
+            }
+        });
 
-           noteArea.addEventListener('blur',function (){
-                if(isEditing) {
-                  finishEditing(noteArea, notes, selectedDays[calendarId].map(item => item.dayKey), calendarId);
-               }
-               if(noteArea.textContent === ''){
-                    updateNoteAreaPlaceholder(noteArea, notes, selectedDays[calendarId].map(item => item.dayKey), calendarId);
-                }
-          });
+        saveBtn.addEventListener('click', function() {
+            if (isEditing) {
+                finishEditing(noteArea, notes, selectedDays[calendarId].map(item => item.dayKey), calendarId);
+                updateNoteAreaPlaceholder(noteArea, notes, selectedDays[calendarId].map(item => item.dayKey), calendarId);
+            }
+        });
 
-           noteArea.addEventListener('blur',function (){
-                if(isEditing) {
-                  finishEditing(noteArea, notes, selectedDays[calendarId].map(item => item.dayKey), calendarId);
-               }
-               if(noteArea.textContent === ''){
-                    updateNoteAreaPlaceholder(noteArea, notes, selectedDays[calendarId].map(item => item.dayKey), calendarId);
-                }
-          });
-
-           noteArea.addEventListener('blur',function (){
-                if(isEditing) {
-                  finishEditing(noteArea, notes, selectedDays[calendarId].map(item => item.dayKey), calendarId);
-               }
-               if(noteArea.textContent === ''){
-                    updateNoteAreaPlaceholder(noteArea, notes, selectedDays[calendarId].map(item => item.dayKey), calendarId);
-                }
-          });
-
-       // Вызов при инициализации и при смене дат
-         updateNoteAreaPlaceholder(noteArea, notes, selectedDays[calendarId]?.map(item => item.dayKey), calendarId);
-
+        updateNoteAreaPlaceholder(noteArea, notes, selectedDays[calendarId]?.map(item => item.dayKey), calendarId);
         generateCalendar();
 
         return {
@@ -347,112 +342,128 @@
         };
     }
 
-    prevMonthButtons.forEach(button => {
-        button.addEventListener('click', function () {
-            const calendarId = this.dataset.calendar;
-            calendars[calendarId].prevMonth()
-        });
-    });
-
-    nextMonthButtons.forEach(button => {
-        button.addEventListener('click', function () {
-            const calendarId = this.dataset.calendar;
-            calendars[calendarId].nextMonth();
-        });
-    });
-
-    for (let i = 1; i <= 2; i++) {
-        calendars[i] = initializeCalendar(i);
-    }
-
-     colorButtonsContainer.addEventListener('click', (event) => {
-        if (event.target.tagName === 'BUTTON') {
-            const color = event.target.dataset.color;
-            for (const calendarId in selectedDays) {
-                selectedDays[calendarId].forEach(selectedDay => {
-                    selectedDay.dayDiv.classList.remove('red', 'blue', 'green', 'orange');
-                    if (selectedDay.dayDiv.classList.contains(color)) {
-                        selectedDay.dayDiv.classList.remove(color);
-                        calendars[calendarId].coloredDates[selectedDay.dayKey] = '';
-                    } else {
-                        selectedDay.dayDiv.classList.add(color);
-                         calendars[calendarId].coloredDates[selectedDay.dayKey] = color;
-                    }
-                    selectedDay.dayDiv.classList.remove('selected')
-                });
-                localStorage.setItem('coloredDates' + calendarId, JSON.stringify(calendars[calendarId].coloredDates));
-                selectedDays[calendarId] = [];
-                const noteArea = document.getElementById('note-area-' + calendarId);
-                 updateNoteAreaPlaceholder(noteArea, calendars[calendarId].notes, [], calendarId);
-            }
-        }
-    });
-
-    function startEditing(noteArea){
+    function startEditing(noteArea, calendarId) {
         isEditing = true;
         noteArea.contentEditable = "true";
         noteArea.focus();
         noteArea.classList.add('editing');
-         if(noteArea.classList.contains('placeholder')) {
+        if(noteArea.classList.contains('placeholder')) {
             noteArea.textContent = '';
-             noteArea.classList.remove('placeholder');
+            noteArea.classList.remove('placeholder');
         }
     }
 
-
-    function finishEditing(noteArea, notes, dayKeys, calendarId){
+    function finishEditing(noteArea, notes, dayKeys, calendarId) {
         isEditing = false;
         noteArea.contentEditable = "false";
-         noteArea.classList.remove('editing');
-       if (dayKeys && dayKeys.length > 0) {
-              dayKeys.forEach(key => {
-                  notes[key] = noteArea.textContent;
-             });
-           localStorage.setItem('notes' + calendarId, JSON.stringify(notes));
+        noteArea.classList.remove('editing');
+        if (dayKeys && dayKeys.length > 0) {
+            dayKeys.forEach(key => {
+                notes[key] = noteArea.textContent;
+            });
+            localStorage.setItem('notes' + calendarId, JSON.stringify(notes));
         }
-
     }
-
 
     function updateNoteAreaPlaceholder(noteArea, notes, dayKeys, calendarId) {
-    let text = '';
-    if (dayKeys && dayKeys.length > 0) {
-        dayKeys.forEach(key => {
-            if (notes[key]) {
-                text += notes[key] + '\n';
-            }
-        });
+        let text = '';
+        if (dayKeys && dayKeys.length > 0) {
+            dayKeys.forEach(key => {
+                if (notes[key]) {
+                    text += notes[key] + '\n';
+                }
+            });
+        }
+
+        if (text === '') {
+            noteArea.textContent = '';
+            noteArea.classList.add('placeholder');
+            noteArea.dataset.placeholder = 'Мам,будут заметки';
+            noteArea.textContent = noteArea.dataset.placeholder;
+        } else {
+            noteArea.classList.remove('placeholder');
+            noteArea.textContent = text;
+            noteArea.dataset.placeholder = null;
+        }
     }
 
-    if (text === '') {
-        noteArea.textContent = ''; // Очищаем текстовое поле
-        noteArea.classList.add('placeholder');
-        noteArea.dataset.placeholder = 'Мам,будут заметки'; // Сохраняем плейсхолдер в атрибуте data-placeholder
-        noteArea.textContent = noteArea.dataset.placeholder; // Устанавливаем плейсхолдер
-    } else {
-        noteArea.classList.remove('placeholder');
-        noteArea.textContent = text; // Устанавливаем заметку, если она есть
-         noteArea.dataset.placeholder = null; // Удаляем сохраненный placeholder
+    function selectDay(dayDiv, dayKey, calendarId, notes, noteArea) {
+        const index = selectedDays[calendarId].findIndex(item => item.dayDiv === dayDiv);
+        if (index === -1) {
+            selectedDays[calendarId].push({dayDiv: dayDiv, dayKey: dayKey, calendarId: calendarId});
+            dayDiv.classList.add('selected');
+        } else {
+            selectedDays[calendarId].splice(index, 1);
+            dayDiv.classList.remove('selected');
+        }
+
+        if(selectedDays[calendarId].length > 0) {
+            let keys = selectedDays[calendarId].map(item => item.dayKey);
+            updateNoteAreaPlaceholder(noteArea, notes, keys, calendarId);
+        } else {
+            updateNoteAreaPlaceholder(noteArea, notes, [], calendarId);
+        }
     }
+
+    // Инициализация календарей
+    for (let i = 1; i <= 2; i++) {
+    calendars[i] = initializeCalendar(i);
 }
 
- function selectDay(dayDiv, dayKey, calendarId, notes, noteArea) {
-          const index = selectedDays[calendarId].findIndex(item => item.dayDiv === dayDiv);
-          if (index === -1) {
-                selectedDays[calendarId].push({dayDiv: dayDiv, dayKey: dayKey, calendarId: calendarId});
-                 dayDiv.classList.add('selected');
-            } else {
-                selectedDays[calendarId].splice(index, 1);
-                dayDiv.classList.remove('selected');
-           }
+    // Обработчики кнопок
+    prevMonthButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            const calendarId = this.dataset.calendar;
+            calendars[calendarId].prevMonth();
+        });
+    });
 
-           if(selectedDays[calendarId].length > 0){
-                 let keys = selectedDays[calendarId].map(item => item.dayKey)
-                updateNoteAreaPlaceholder(noteArea, notes, keys, calendarId)
-           } else {
-            updateNoteAreaPlaceholder(noteArea, notes, [], calendarId)
-         }
- }
+    nextMonthButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            const calendarId = this.dataset.calendar;
+            calendars[calendarId].nextMonth();
+        });
+    });
+    
+    colorButtonsContainer.addEventListener('click', (event) => {
+    if (event.target.tagName === 'BUTTON') {
+        const color = event.target.dataset.color;
+        // Работаем с обоими календарями
+        for (const calendarId in selectedDays) {
+            selectedDays[calendarId].forEach(selectedDay => {
+                selectedDay.dayDiv.classList.remove('red', 'blue', 'green');
+                if (selectedDay.dayDiv.classList.contains(color)) {
+                    calendars[calendarId].coloredDates[selectedDay.dayKey] = '';
+                } else {
+                    selectedDay.dayDiv.classList.add(color);
+                    calendars[calendarId].coloredDates[selectedDay.dayKey] = color;
+                }
+                selectedDay.dayDiv.classList.remove('selected');
+            });
+            
+            localStorage.setItem('coloredDates' + calendarId, JSON.stringify(calendars[calendarId].coloredDates));
+            selectedDays[calendarId] = [];
+            const noteArea = document.getElementById('note-area-' + calendarId);
+            updateNoteAreaPlaceholder(noteArea, calendars[calendarId].notes, [], calendarId);
+        }
+    }
+});
+
+        // В обработчиках кнопок "Сохранить" должно быть:
+        document.querySelectorAll('.save-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const calendarId = this.dataset.calendar;
+                const noteArea = document.getElementById(`note-area-${calendarId}`);
+                if (isEditing) {
+                    finishEditing(noteArea, calendars[calendarId].notes, 
+                                selectedDays[calendarId].map(item => item.dayKey), 
+                                calendarId);
+                    updateNoteAreaPlaceholder(noteArea, calendars[calendarId].notes, 
+                                            selectedDays[calendarId].map(item => item.dayKey), 
+                                            calendarId);
+                }
+            });
+        });
 </script>
 </body>
 </html>
